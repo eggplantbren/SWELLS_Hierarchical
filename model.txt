@@ -1,0 +1,75 @@
+data
+{
+	for(i in 1:N)
+	{
+		for(j in 1:3)
+		{
+			tau[i, j] <- pow(sig[i, j], -2)
+		}
+	}
+}
+
+model
+{
+	# Between half-of-Chabrier and double-Salpeter
+	median_a_bulge ~ dunif(0.3, 2.)
+	median_a_disk  ~ dunif(0.3, 2.)
+	log_sig_loga_bulge ~ dunif(-6.908, 2.303)
+	log_sig_loga_disk  ~ dunif(-6.908, 2.303)
+	sig_loga_bulge <- exp(log_sig_loga_bulge)
+	sig_loga_disk  <- exp(log_sig_loga_disk)
+
+	for(i in 1:N)
+	{
+		latent_loga_bulge[i] ~ dnorm(0, 1)
+		loga_bulge[i] <- log(median_a_bulge) + sig_loga_bulge*latent_loga_bulge[i]
+		latent_loga_disk[i] ~ dnorm(0, 1)
+		loga_disk[i] <- log(median_a_disk) + sig_loga_disk*latent_loga_disk[i]
+
+		a_bulge[i] <- exp(loga_bulge[i])
+		a_disk[i]  <- exp(loga_disk[i])
+	}
+
+	mu_bulge ~ dunif(5., 15.)
+	mu_disk  ~ dunif(5., 15.)
+	log_sig_bulge ~ dunif(-6.908, 2.303)
+	log_sig_disk  ~ dunif(-6.908, 2.303)
+	sig_bulge <- exp(log_sig_bulge)
+	sig_disk  <- exp(log_sig_disk)
+	tau_bulge <- pow(sig_bulge, -2)
+	tau_disk  <- pow(sig_disk,  -2)
+
+	logit_0 ~ dunif(-10., 10.)
+	logit_m ~ dt(0., pow(10., -2), 1.)
+	logit_log_scatter ~ dunif(-6.908, 2.303)
+	logit_scatter <- exp(logit_log_scatter)
+
+	for(i in 1:N)
+	{
+		# Observables related to stellar masses, bulge and disk
+		latent_x_bulge[i] ~ dnorm(0, 1)
+		latent_x_disk[i]  ~ dnorm(0, 1)
+		x_bulge[i] <- mu_bulge + sig_bulge*latent_x_bulge[i]
+		x_disk[i]  <- mu_disk  + sig_disk *latent_x_disk[i]
+
+		# Actual stellar masses using x = log10(m/a)
+		m_bulge[i] <- a_bulge[i]*pow(10., x_bulge[i])
+		m_disk[i]  <- a_disk[i] *pow(10., x_disk[i])
+
+		latent_logit[i] ~ dnorm(0, 1)
+		logit[i] <- logit_0 + logit_m*log10_sig_sie[i] + logit_scatter*latent_logit[i]
+		f[i] <- exp(logit[i])/(1. + exp(logit[i]))
+		F[i] <- log(f[i])/log(10.)
+		x_total[i] <- log(m_bulge[i] + m_disk[i])/log(10.) - F[i]
+
+		# Stellar mass fractions
+		f_bulge[i] <- m_bulge[i]/pow(10., x_total[i])
+		f_disk[i]  <- m_disk[i] /pow(10., x_total[i])
+
+		# Likelihood
+		X[i, 1] ~ dnorm(x_bulge[i], tau[i, 1])
+		X[i, 2] ~ dnorm(x_disk[i],  tau[i, 2])
+		X[i, 3] ~ dnorm(x_total[i], tau[i, 3])
+	}
+}
+
