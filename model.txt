@@ -25,8 +25,6 @@ model
 	log_sig_disk  ~ dunif(-6.908, 2.303)
 	sig_bulge <- exp(log_sig_bulge)
 	sig_disk  <- exp(log_sig_disk)
-	tau_bulge <- pow(sig_bulge, -2)
-	tau_disk  <- pow(sig_disk,  -2)
 
 	logit_0 ~ dunif(-10., 10.)
 	logit_m ~ dt(0., pow(10., -2), 1.)
