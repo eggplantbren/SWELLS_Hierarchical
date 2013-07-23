@@ -1,14 +1,3 @@
-data
-{
-	for(i in 1:N)
-	{
-		for(j in 1:3)
-		{
-			tau[i, j] <- pow(sig[i, j], -2)
-		}
-	}
-}
-
 model
 {
 	# Between half-of-Chabrier and double-Salpeter
@@ -67,9 +56,9 @@ model
 		f_disk[i]  <- m_disk[i] /pow(10., x_total[i])
 
 		# Likelihood
-		X[i, 1] ~ dnorm(x_bulge[i], tau[i, 1])
-		X[i, 2] ~ dnorm(x_disk[i],  tau[i, 2])
-		X[i, 3] ~ dnorm(x_total[i], tau[i, 3])
+		X[i, 1] ~ dnorm(x_bulge[i], pow(sig[i, 1], -2))
+		X[i, 2] ~ dnorm(x_disk[i],  pow(sig[i, 2], -2))
+		X[i, 3] ~ dnorm(x_total[i], pow(sig[i, 3], -2))
 	}
 }
 
