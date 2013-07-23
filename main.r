@@ -11,7 +11,7 @@ set.seed(123)
 source('data.r')
 
 # Create the model
-m = jags.model(file="model.txt", data=data)
+m = jags.model(file="model.jags", data=data)
 
 # Burn-in
 update(m, 10000)
